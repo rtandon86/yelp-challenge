@@ -1,0 +1,9 @@
+ # Dependencies
+
+numpy 1.15.4
+pandas 0.24.0
+tensorflow 1.12.0
+keras 2.2.4
+pillow 5.4.1
+pydot 1.3.0
+graphviz 2.40.1
