@@ -16,7 +16,7 @@ To ensure the code runs successfully please install all the packages mentioned i
 
 Code Set Up
 ------------
-in the code folder you will find two files -
+You will find two files -
 1. preprocess_data.py - this code extracts some of the images and data from photos and business file to be used in this project, also it ensures that all the captions are valid captions if not the code creates caption for the image. All the images are sent to feature extraction module, where using VGG model all relevant features are extracted. All the captions also undergo text cleaning.
 
 2. train.py - This code splits the data in train and validate set defines the model and trains the model.
