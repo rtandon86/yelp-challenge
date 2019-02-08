@@ -37,11 +37,11 @@ def read_file(path):
 
 def get_bal_data(df):
     print("Extracting equal amount of labels from the dataset")
-    p1 = df_photo[df.label=="food"][0:200]
-    p1 = p1.append(df[df.label=="drink"][0:200])
-    p1 = p1.append(df[df.label=="inside"][0:200])
-    p1 = p1.append(df[df.label=="outside"][0:200])
-    p1 = p1.append(df[df.label=="menu"][0:200])
+    p1 = df_photo[df.label=="food"][0:2000]
+    p1 = p1.append(df[df.label=="drink"][0:2000])
+    p1 = p1.append(df[df.label=="inside"][0:2000])
+    p1 = p1.append(df[df.label=="outside"][0:2000])
+    p1 = p1.append(df[df.label=="menu"][0:2000])
     return(p1)
 
 def update_captions(df1,df2):
