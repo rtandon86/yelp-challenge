@@ -38,15 +38,18 @@ def split_file(filename):
     file.close()
     train_dataset = list()
     val_dataset = list()
+    test_dataset = list()
     ctr = 0
     for line in text.split('\n'):
         identifier = line.split(' ')[0]
         ctr = ctr + 1
-        if((ctr >= 0 and ctr <= 1500) or (ctr >= 2000 and ctr <= 3500) or(ctr >= 4000 and ctr <= 5500) or(ctr >= 6000 and ctr <= 7500) or(ctr >= 8000 and ctr <= 9500)):
+        if((ctr >= 0 and ctr <= 400) or (ctr >= 600 and ctr <= 1000) or(ctr >= 1200 and ctr <= 1600) or(ctr >= 1800 and ctr <= 2200) or(ctr >= 2400 and ctr <= 2800)):
             train_dataset.append(identifier)
-        else:
+        elif((ctr > 400 and ctr <= 500) or (ctr > 1000 and ctr <= 1100) or(ctr > 1600 and ctr <= 1700) or(ctr > 2200 and ctr <= 2300) or(ctr > 2800 and ctr <= 2900)):
             val_dataset.append(identifier)
-    return train_dataset, val_dataset
+        else:
+            test_dataset.append(identifier)
+    return train_dataset, val_dataset, test_dataset
 
 # load doc into memory
 def load_doc(filename):
@@ -145,13 +148,24 @@ def define_model(vocab_size, max_length):
 	inputs1 = Input(shape=(4096,))
 	fe1 = Dropout(0.5)(inputs1)
 	fe2 = Dense(256, activation='relu')(fe1)
+    # Fine tuning- decreasing the representational capacity of the sequence encoder(smaller sized fixed-length vector)
+    # Fine tuning- fe2 = Dense(128, activation='relu')(fe1)
 	# sequence model
 	inputs2 = Input(shape=(max_length,))
 	se1 = Embedding(vocab_size, 256, mask_zero=True)(inputs2)
+    # Fine tuning- updating the represntation capacaity of word embedding by changing dimension
+    # Fine tuning- se1 = Embedding(vocab_size, 128, mask_zero=True)(inputs2)
 	se2 = Dropout(0.5)(se1)
 	se3 = LSTM(256)(se2)
+    # Fine tuning- decreasing the representational capacity of the sequence encoder (smaller sized fixed-length vector)
+    # Fine tuning- se3 = LSTM(128)(se2)
+    # Fine tuning- double the number of LSTM layers 
+    # Fine tuning- se4 = LSTM(256)(se3)
 	# decoder model
 	decoder1 = add([fe2, se3])
+    # Fine tuning- adding language model()
+	# Fine tuning- lm1 = LSTM(256)(decoder1)
+	# Fine tuning- decoder2 = Dense(256, activation='relu')(lm1)
 	decoder2 = Dense(256, activation='relu')(decoder1)
 	outputs = Dense(vocab_size, activation='softmax')(decoder2)
 	# tie it together [image, seq] [word]
@@ -173,7 +187,7 @@ if __name__ == '__main__':
     path = args.path
     file_path = path+"preprocess_data/descriptions.txt"
     business_path = path+"preprocess_data/features.pkl"
-    train_dataset, val_dataset = split_file(file_path)
+    train_dataset, val_dataset, test_dataset = split_file(file_path)
     print('Train Dataset: %d' % len(train_dataset))
     train_descriptions = load_clean_descriptions(file_path, train_dataset)
     train_features = load_photo_features(business_path, train_dataset)
@@ -188,9 +202,16 @@ if __name__ == '__main__':
     val_features = load_photo_features(business_path, val_dataset)
     print('Photos: validate=%d' % len(val_features))
     X1val, X2val, yval = create_sequences(tokenizer, max_length, val_descriptions, val_features)
+    
+    
+    # loading test data 
+    test_descriptions = load_clean_descriptions(file_path, test_dataset)
+    test_features = load_photo_features(business_path, test_dataset)
+    print('Photos: test=%d' % len(test_features))
+    X1test, X2test, ytest = create_sequences(tokenizer, max_length, test_descriptions, test_features)
+    
     #executing model
     model = define_model(vocab_size, max_length)
     filepath = 'model-ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5'
     checkpoint = ModelCheckpoint(filepath, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
-    model.fit([X1train, X2train], ytrain, epochs=20, verbose=2, callbacks=[checkpoint],validation_data=([X1val,X2val],yval))
-    
+    model.fit([X1train, X2train], ytrain, epochs=7, verbose=2, callbacks=[checkpoint],validation_data=([X1val,X2val],yval))
